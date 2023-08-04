@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 import express from 'express';
 import cors from 'cors';
 import getUrls from 'get-urls';
-import { HfInference } from '@huggingface/inference'
+
 // import puppeteer from 'puppeteer-core';
 // import chromium from 'chrome-aws-lambda';
 
@@ -15,7 +15,21 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 
-const hf = new HfInference("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")
+
+// const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
+
+async function query(data) {
+    const response = await fetch(
+        "https://api-inference.huggingface.co/models/deepset/minilm-uncased-squad2",
+        {
+            headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_TOKEN}` },
+            method: "POST",
+            body: JSON.stringify(data),
+        }
+    );
+    const result = await response.json();
+    return result;
+}
 
 app.post('/getinfo', cors(), async (request, response) => {
     try {
@@ -42,15 +56,8 @@ app.post('/getinfo', cors(), async (request, response) => {
             //     inputs: `context: ${JSON.stringify(forAI)}
             //     question: Calculate approximate price of a ${condition} ${body.item}?`
             // })
-            const seed = await hf.questionAnswering({
-                model: 'deepset/minilm-uncased-squad2',
-                inputs: {
-                    question: "Calculate approximate price of a " + condition + " " + body.item + "?",
-                    context: JSON.stringify(forAI)
-                }
-            })
-
-
+            const seed = await query({ inputs: { question: "Calculate approximate price of a " + condition + " " + body.item + "?", context: JSON.stringify(forAI) } })
+            console.log(seed)
             // const seed = await see("Hello, I'm a language model", max_length = 30, num_return_sequences = 3)
 
             best.push({
