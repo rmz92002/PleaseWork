@@ -261,7 +261,7 @@ const ScrapeDokan = (web) => {
     return Promise.all(requests);
 }
 
-app.listen(8000, () => {
+app.listen(3000, () => {
     console.log("port is listening")
     // scaperWeb("iPhone 10", "Used")
 })
