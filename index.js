@@ -18,84 +18,55 @@ app.use(express.json());
 const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
 
 app.post('/getinfo', cors(), async (request, response) => {
-    // Your route handling logic here
-    // const see = await pipeline('text-generation', 'Xenova/distilgpt2')
-    const body = request.body;
-    const info = []
-    // const image = await ScrapeImage(body.item)
-    for (const website of body.website) {
-        // if (website.includes("dokan")) {
-        //     const data = await ScrapeDokan(website);
-        //     info.push(...data[0])
-        // }
-        // if (website.includes("bestbuy")) {
-        //     const data = await ScapePuppeteerBestbuy(website);
-        //     info.push(...data)
-        // } else {
-        const data = await ScrapeEbay(website);
-        info.push(...data[0])
-        // }
-    }
-    const forAI = info.map((item) => {
-        return {
-            title: item.title,
-            price: item.price,
-            shipping: item.shipping,
+    try {
+        const body = request.body;
+        const info = []
+        for (const website of body.website) {
+            const data = await ScrapeEbay(website);
+            info.push(...data[0])
+            // }
         }
-    })
-    // const loader = new TextLoader(JSON.stringify(forAI).trim());
-    // const docs = await loader.load();
-    // const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
-    // const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-    // const docs = await textSplitter.createDocuments([JSON.stringify(forAI).trim()]);
-    // const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
-    // const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
-    const best = []
-    for (const condition of body.condition) {
-        // const answ = await model.findAnswers("Calculate approximate price of a " + condition + body.item + "in less than 10 characters?", JSON.stringify(forAI))
-        // const res = await generate("Calculate approximate price of a " + condition + body.item + "?", JSON.stringify(forAI));
-        // const fan = await hf.conversational({
-        //     model: 'meta-llama/Llama-2-7b',
-        //     inputs: `context: ${JSON.stringify(forAI)}
-        //     question: Calculate approximate price of a ${condition} ${body.item}?`
-        // })
-        const seed = await hf.questionAnswering({
-            model: 'deepset/minilm-uncased-squad2',
-            inputs: {
-                question: "Calculate approximate price of a " + condition + " " + body.item + "?",
-                context: JSON.stringify(forAI)
+        const forAI = info.map((item) => {
+            return {
+                title: item.title,
+                price: item.price,
+                shipping: item.shipping,
             }
         })
+        const best = []
+        for (const condition of body.condition) {
+            // const answ = await model.findAnswers("Calculate approximate price of a " + condition + body.item + "in less than 10 characters?", JSON.stringify(forAI))
+            // const res = await generate("Calculate approximate price of a " + condition + body.item + "?", JSON.stringify(forAI));
+            // const fan = await hf.conversational({
+            //     model: 'meta-llama/Llama-2-7b',
+            //     inputs: `context: ${JSON.stringify(forAI)}
+            //     question: Calculate approximate price of a ${condition} ${body.item}?`
+            // })
+            const seed = await hf.questionAnswering({
+                model: 'deepset/minilm-uncased-squad2',
+                inputs: {
+                    question: "Calculate approximate price of a " + condition + " " + body.item + "?",
+                    context: JSON.stringify(forAI)
+                }
+            })
 
 
-        // const seed = await see("Hello, I'm a language model", max_length = 30, num_return_sequences = 3)
+            // const seed = await see("Hello, I'm a language model", max_length = 30, num_return_sequences = 3)
 
-        best.push({
-            price: seed.answer,
-            condition: condition
+            best.push({
+                price: seed.answer,
+                condition: condition
+            })
+        }
+        response.send({
+            "price": best,
+            "data": info,
+            "image": info[0].image
         })
+
+    } catch (error) {
+        response.status(500).send(error)
     }
-    response.send({
-        "price": best,
-        "data": info,
-        "image": info[0].image
-    })
-    // const price = await openai.createCompletion({
-    //     model: "text-davinci-003",
-    //     prompt: `Examples:
-    //     ${JSON.stringify(forAI).trim()}
-    //     The exact approximate price of a ${body.item} that are ${body.condition} is: `,
-    //     max_tokens: 100,
-    //     temperature: 0,
-    // })
-    // const real_price = price.data.choices[0].text.trim().replace(/"/g, "")
-    // console.log(`The exact approximate price for each ${body.item} that are ${body.condition} is: `)
-    // console.log("working")
-    // response.send({
-    //     "price": real_price,
-    //     "data": data[0]
-    // })
-    // console.log("did it ")
 });
 
 // const ScrapeImage = async (product) => {
@@ -136,28 +107,32 @@ const ScrapeEbay = (web) => {
     const urls = Array.from(getUrls(web));
 
     const requests = urls.map(async url => {
-        const res = await fetch(url);
-        const html = await res.text();
-        // console.log(html)
-        const $ = load(html);
-        const data = []
-        $("#srp-river-results > ul").each((i, el) => {
-            $(el).find("li.s-item").each((i, el) => {
-                data.push({
-                    title: $(el).find(".s-item__link > .s-item__title > span").text(),
-                    price: $(el).find("span.s-item__price").text(),
-                    image: $(el).find("div > .s-item__image-section > div > a > div > img").attr("src"),
-                    date: $(el).find("div > div.s-item__info.clearfix > div.s-item__caption-section > div > span.POSITIVE").text(),
-                    shipping: $(el).find("div > div.s-item__info.clearfix > div.s-item__details.clearfix > div:nth-child(4) > span").text(),
+        try {
+            const res = await fetch(url);
+            const html = await res.text();
+            // console.log(html)
+            const $ = load(html);
+            const data = []
+            $("#srp-river-results > ul").each((i, el) => {
+                $(el).find("li.s-item").each((i, el) => {
+                    data.push({
+                        title: $(el).find(".s-item__link > .s-item__title > span").text(),
+                        price: $(el).find("span.s-item__price").text(),
+                        image: $(el).find("div > .s-item__image-section > div > a > div > img").attr("src"),
+                        date: $(el).find("div > div.s-item__info.clearfix > div.s-item__caption-section > div > span.POSITIVE").text(),
+                        shipping: $(el).find("div > div.s-item__info.clearfix > div.s-item__details.clearfix > div:nth-child(4) > span").text(),
+                    })
                 })
             })
-        })
 
-        const getMetatag = (name) =>
-            $(`meta[name=${name}]`).attr('content') ||
-            $(`meta[name="og:${name}"]`).attr('content') ||
-            $(`meta[name="twitter:${name}"]`).attr('content');
-        return data
+            const getMetatag = (name) =>
+                $(`meta[name=${name}]`).attr('content') ||
+                $(`meta[name="og:${name}"]`).attr('content') ||
+                $(`meta[name="twitter:${name}"]`).attr('content');
+            return data
+        } catch (err) {
+            console.log(err)
+        }
     });
     return Promise.all(requests);
 }
