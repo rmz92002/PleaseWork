@@ -65,7 +65,7 @@ app.post('/getinfo', cors(), async (request, response) => {
         })
 
     } catch (error) {
-        response.status(500).send(error)
+        response.send(error)
     }
 });
 
