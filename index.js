@@ -98,6 +98,35 @@ app.post('/getinfo', cors(), async (request, response) => {
     // console.log("did it ")
 });
 
+const ScrapeImage = async (product) => {
+    const browser = await puppeteer.launch({
+        headless: 'new',
+        // `headless: true` (default) enables old Headless;
+        // `headless: 'new'` enables new Headless;
+        // `headless: false` enables “headful” mode.
+    });
+    const page = await browser.newPage();
+    await page.goto(`https://www.google.com/search?sxsrf=AB5stBitTXFlPVor6er7GcahFPhl636aIg:1689350330462&q=${product.replace(" ", "+")}&tbm=isch&sa=X&ved=2ahUKEwiktOSyyI6AAxX3lokEHWu4C20Q0pQJegQIDRAB&biw=1508&bih=778&dpr=2`)
+    await page.waitForSelector("#islrg > div.islrc > div:nth-child(2) > a.wXeWr.islib.nfEiy > div.bRMDJf.islir > img")
+    // const image = await page.$$("div.bRMDJf.islir > img")
+    const image = await page.$eval('#islrg > div.islrc > div:nth-child(2) > a.wXeWr.islib.nfEiy > div.bRMDJf.islir > img', span => span.src)
+    // const res = await fetch(`https://www.google.com/search?sxsrf=AB5stBitTXFlPVor6er7GcahFPhl636aIg:1689350330462&q=${product.replace(" ", "+")}&tbm=isch&sa=X&ved=2ahUKEwiktOSyyI6AAxX3lokEHWu4C20Q0pQJegQIDRAB&biw=1508&bih=778&dpr=2`);
+    // const html = await res.text();
+    // // console.log(html)
+    // const $ = load(html);
+    // const data = []
+    // const image = $("#islrg > div.islrc > div:nth-child(2) > a.wXeWr.islib.nfEiy > div.bRMDJf.islir > img").length
+
+    // for (const im of image) {
+    //     try {
+    //         console.log(await im.getAttribute("src"))
+    //     } catch (error) {
+    //         continue
+    //     }
+    // }
+    return image
+}
+
 
 const ScrapeEbay = (web) => {
 
