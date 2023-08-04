@@ -18,17 +18,22 @@ app.use(express.json());
 
 // const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
 
-async function query(data) {
-    const response = await fetch(
-        "https://api-inference.huggingface.co/models/deepset/minilm-uncased-squad2",
-        {
-            headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_TOKEN}` },
-            method: "POST",
-            body: JSON.stringify(data),
-        }
-    );
-    const result = await response.json();
-    return result;
+async function queryAI(data) {
+    try {
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/deepset/minilm-uncased-squad2",
+            {
+                headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_TOKEN}` },
+                method: "POST",
+                body: JSON.stringify(data),
+            }
+        );
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error(error);
+    }
+
 }
 
 app.post('/getinfo', cors(), async (request, response) => {
@@ -56,7 +61,7 @@ app.post('/getinfo', cors(), async (request, response) => {
             //     inputs: `context: ${JSON.stringify(forAI)}
             //     question: Calculate approximate price of a ${condition} ${body.item}?`
             // })
-            const seed = await query({ inputs: { question: "Calculate approximate price of a " + condition + " " + body.item + "?", context: JSON.stringify(forAI) } })
+            const seed = await queryAI({ inputs: { question: "Calculate approximate price of a " + condition + " " + body.item + "?", context: JSON.stringify(forAI) } })
             console.log(seed)
             // const seed = await see("Hello, I'm a language model", max_length = 30, num_return_sequences = 3)
 
