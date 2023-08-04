@@ -65,6 +65,7 @@ app.post('/getinfo', cors(), async (request, response) => {
         })
 
     } catch (error) {
+        console.log(error)
         response.send(error)
     }
 });
@@ -131,6 +132,7 @@ const ScrapeEbay = (web) => {
                 $(`meta[name="twitter:${name}"]`).attr('content');
             return data
         } catch (err) {
+
             console.log(err)
         }
     });
