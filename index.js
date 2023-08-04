@@ -1,11 +1,11 @@
 import { load } from 'cheerio'
 import fetch from 'node-fetch'
 import express from 'express';
-import puppeteer from 'puppeteer';
 import cors from 'cors';
 import getUrls from 'get-urls';
 import { HfInference } from '@huggingface/inference'
-
+import puppeteer from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
 
 import * as dotenv from 'dotenv';
 
@@ -69,7 +69,7 @@ app.post('/getinfo', cors(), async (request, response) => {
 
 
         // const seed = await see("Hello, I'm a language model", max_length = 30, num_return_sequences = 3)
-        console.log(seed)
+
         best.push({
             price: seed.answer,
             condition: condition
@@ -100,7 +100,9 @@ app.post('/getinfo', cors(), async (request, response) => {
 
 const ScrapeImage = async (product) => {
     const browser = await puppeteer.launch({
-        headless: 'new',
+        args: chromium.args,
+        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath,
+        headless: true,
         // `headless: true` (default) enables old Headless;
         // `headless: 'new'` enables new Headless;
         // `headless: false` enables “headful” mode.
@@ -124,6 +126,7 @@ const ScrapeImage = async (product) => {
     //         continue
     //     }
     // }
+    browser.close();
     return image
 }
 
@@ -161,10 +164,9 @@ const ScrapeEbay = (web) => {
 
 const ScapePuppeteerBestbuy = async (web) => {
     const browser = await puppeteer.launch({
-        headless: 'new',
-        // `headless: true` (default) enables old Headless;
-        // `headless: 'new'` enables new Headless;
-        // `headless: false` enables “headful” mode.
+        args: chromium.args,
+        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath,
+        headless: true,
     });
     const page = await browser.newPage();
     await page.goto(web)
