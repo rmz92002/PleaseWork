@@ -15,7 +15,7 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 
-const hf = new HfInference(process.env.HUGGING_FACE_TOKEN)
+const hf = new HfInference("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")
 
 app.post('/getinfo', cors(), async (request, response) => {
     try {
