@@ -4,8 +4,8 @@ import express from 'express';
 import cors from 'cors';
 import getUrls from 'get-urls';
 import { HfInference } from '@huggingface/inference'
-import puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+// import puppeteer from 'puppeteer-core';
+// import chromium from 'chrome-aws-lambda';
 
 import * as dotenv from 'dotenv';
 
