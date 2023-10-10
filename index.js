@@ -21,7 +21,7 @@ app.use(express.json());
 async function queryAI(data) {
     try {
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/deepset/minilm-uncased-squad2",
+            "https://api-inference.huggingface.co/models/google/flan-t5-base",
             {
                 headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_TOKEN}` },
                 method: "POST",
@@ -61,12 +61,12 @@ app.post('/getinfo', cors(), async (request, response) => {
             //     inputs: `context: ${JSON.stringify(forAI)}
             //     question: Calculate approximate price of a ${condition} ${body.item}?`
             // })
-            const seed = await queryAI({ inputs: { question: "Calculate approximate price of a " + condition + " " + body.item + "?", context: JSON.stringify(forAI) } })
-            console.log(seed)
+            const seed = await queryAI({ inputs: " Context: \n " + JSON.stringify(forAI)  + " Calculate approximate price of a " + condition + " " + body.item + "?", })
+            console.log(seed[0].generated_text)
             // const seed = await see("Hello, I'm a language model", max_length = 30, num_return_sequences = 3)
 
             best.push({
-                price: seed.answer,
+                price: seed[0].generated_text,
                 condition: condition
             })
         }
